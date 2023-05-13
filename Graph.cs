@@ -4,9 +4,8 @@ namespace Lab12
 {
     public class Edge
     {
-        public Node ConnectedNode { get; set; } //Зв'язана вершина
-        public int EdgeWeight { get; set; } // Вага ребра
-        // Конструктор - ініціалізує властивості
+        public Node ConnectedNode { get; set; } 
+        public int EdgeWeight { get; set; } 
         public Edge(Node connectedNode, int weight)
         {
             ConnectedNode = connectedNode;
@@ -25,7 +24,7 @@ namespace Lab12
             NodeNumber = number;
         }
 
-        public void AddEdge(Edge newEdge)
+        private void AddEdge(Edge newEdge)
         {
             Edges.Add(newEdge);
         }
@@ -75,6 +74,5 @@ namespace Lab12
                 n2.AddEdge(n1, weight);
             }
         }
-
     }
 }

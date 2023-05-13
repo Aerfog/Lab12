@@ -31,9 +31,9 @@ namespace Lab12
         public bool IsUnvisited { get; set; }
         public int EdgesWeightSum { get; set; }
         public Node PreviousNode { get; set; }
-        public GraphNodeInfo(Node vertex)
+        public GraphNodeInfo(Node node)
         {
-            Node = vertex;
+            Node = node;
             IsUnvisited = true;
             EdgesWeightSum = int.MaxValue;
             PreviousNode = null;
@@ -92,7 +92,7 @@ namespace Lab12
             return FindShortestPath(graph.FindNode(startName), graph.FindNode(finishName));
         }
 
-        public string FindShortestPath(Node startNode, Node finishNode)
+        private string FindShortestPath(Node startNode, Node finishNode)
         {
             InitInfo();
             var first = GetNodeInfo(startNode);
