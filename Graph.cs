@@ -71,7 +71,6 @@ namespace Lab12
             if (n2 != null && n1 != null)
             {
                 n1.AddEdge(n2, weight);
-                n2.AddEdge(n1, weight);
             }
         }
     }
