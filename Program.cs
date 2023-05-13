@@ -6,70 +6,135 @@ namespace Lab12
     {
         static void Main(string[] args)
         {
-            var graph = new Graph(6);
-            var weights = new Dictionary<Edge, double>();
-            weights[graph.Connect(0, 1)] = 18;
-            weights[graph.Connect(0, 2)] = 25;
-            weights[graph.Connect(2, 3)] = 5;
-            weights[graph.Connect(2, 4)] = 23;
-            weights[graph.Connect(2, 5)] = 30;
-            weights[graph.Connect(4, 5)] = 10;
-
-            var path = Dijkstra(graph, weights, graph[0], graph[5]).Select(n => n.NodeNumber+1);
-            foreach (var node in path)
+            var g = new Graph();
+            for (int i = 1; i <= 6; i++)
             {
-                Console.WriteLine(node);
-            }
-        }
-        public static List<Node> Dijkstra(Graph graph, Dictionary<Edge, double> weights, Node start, Node end)
-        {
-            var notVisited = graph.Nodes.ToList();
-            var track = new Dictionary<Node, DijkstraData>();
-            track[start] = new DijkstraData { Price = 0, Previous = null };
-
-            while (true)
-            {
-                Node toOpen = null;
-                var bestPrice = double.PositiveInfinity;
-                foreach (var e in notVisited)
-                {
-                    if (track.ContainsKey(e) && track[e].Price < bestPrice)
-                    {
-                        bestPrice = track[e].Price;
-                        toOpen = e;
-                    }
-                }
-
-                if (toOpen == null) return null;
-                if (toOpen == end) break;
-
-                foreach (var e in toOpen.IncidentEdges.Where(z => z.From == toOpen))
-                {
-                    var currentPrice = track[toOpen].Price + weights[e];
-                    var nextNode = e.OtherNode(toOpen);
-                    if (!track.ContainsKey(nextNode) || track[nextNode].Price > currentPrice)
-                    {
-                        track[nextNode] = new DijkstraData { Previous = toOpen, Price = currentPrice };
-                    }
-                }
-
-                notVisited.Remove(toOpen);
+                g.AddNode(i);
             }
 
-            var result = new List<Node>();
-            while (end != null)
-            {
-                result.Add(end);
-                end = track[end].Previous;
-            }
-            result.Reverse();
-            return result;
+            g.AddEdge(1, 2, 18);
+            g.AddEdge(1, 3, 25);
+            g.AddEdge(3, 4, 5);
+            g.AddEdge(3, 5, 23);
+            g.AddEdge(3, 6, 30);
+            g.AddEdge(5, 6, 10);
+
+            var dijkstra = new Dijkstra(g);
+            var path = dijkstra.FindShortestPath(1, 6);
+            Console.WriteLine(path);
         }
     }
 
-    class DijkstraData
+    internal class GraphNodeInfo
     {
-        public Node Previous { get; set; }
-        public double Price { get; set; }
+        public Node Node { get; set; }
+        public bool IsUnvisited { get; set; }
+        public int EdgesWeightSum { get; set; }
+        public Node PreviousNode { get; set; }
+        public GraphNodeInfo(Node vertex)
+        {
+            Node = vertex;
+            IsUnvisited = true;
+            EdgesWeightSum = int.MaxValue;
+            PreviousNode = null;
+        }
+    }
+
+    internal class Dijkstra
+    {
+        Graph graph;
+
+        List<GraphNodeInfo> infos;
+
+        public Dijkstra(Graph graph)
+        {
+            this.graph = graph;
+        }
+
+        void InitInfo()
+        {
+            infos = new List<GraphNodeInfo>();
+            foreach (var n in graph.Nodes)
+            {
+                infos.Add(new GraphNodeInfo(n));
+            }
+        }
+
+        GraphNodeInfo GetNodeInfo(Node n)
+        {
+            foreach (var i in infos)
+            {
+                if (i.Node.Equals(n))
+                {
+                    return i;
+                }
+            }
+            return null;
+        }
+
+        public GraphNodeInfo FindUnvisitedNodeWithMinSum()
+        {
+            var minValue = int.MaxValue;
+            GraphNodeInfo minNodeInfo = null;
+            foreach (var i in infos)
+            {
+                if (i.IsUnvisited && i.EdgesWeightSum < minValue)
+                {
+                    minNodeInfo = i;
+                    minValue = i.EdgesWeightSum;
+                }
+            }
+            return minNodeInfo;
+        }
+
+        public string FindShortestPath(int startName, int finishName)
+        {
+            return FindShortestPath(graph.FindNode(startName), graph.FindNode(finishName));
+        }
+
+        public string FindShortestPath(Node startNode, Node finishNode)
+        {
+            InitInfo();
+            var first = GetNodeInfo(startNode);
+            first.EdgesWeightSum = 0;
+            while (true)
+            {
+                var current = FindUnvisitedNodeWithMinSum();
+                if (current == null)
+                {
+                    break;
+                }
+
+                SetSumToNextNode(current);
+            }
+
+            return GetPath(startNode, finishNode);
+        }
+
+        void SetSumToNextNode(GraphNodeInfo info)
+        {
+            info.IsUnvisited = false;
+            foreach (var e in info.Node.Edges)
+            {
+                var nextInfo = GetNodeInfo(e.ConnectedNode);
+                var sum = info.EdgesWeightSum + e.EdgeWeight;
+                if (sum < nextInfo.EdgesWeightSum)
+                {
+                    nextInfo.EdgesWeightSum = sum;
+                    nextInfo.PreviousNode = info.Node;
+                }
+            }
+        }
+
+        string GetPath(Node startNode, Node endNode)
+        {
+            var path = endNode.ToString();
+            while (startNode != endNode)
+            {
+                endNode = GetNodeInfo(endNode).PreviousNode;
+                path = endNode.ToString() + "->" + path;
+            }
+            return path;
+        }
     }
 }
